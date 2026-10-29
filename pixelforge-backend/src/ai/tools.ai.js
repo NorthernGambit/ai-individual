@@ -192,7 +192,7 @@ const subtractFromCart = tool(
 				.min(1)
 				.optional()
 				.describe(
-					"Antal att lägga till. Utelämna om användaren inte säger något.",
+					"Antal att ta bort. Utelämna om användaren inte säger något.",
 				),
 		}),
 	},

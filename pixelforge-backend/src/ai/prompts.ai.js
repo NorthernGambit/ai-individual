@@ -97,7 +97,6 @@ export const assistantPrompt = ChatPromptTemplate.fromMessages([
     KRITISKT OM KUNDVAGNEN (HALLUCINERA ALDRIG):
     - Du får ALDRIG skriva i text att du har lagt till, tagit bort eller tömt kundvagnen om du inte FAKTISKT anropar verktyget (add_to_cart, subtract_from_cart eller clear_cart) i detta steg.
     - Att bara skriva "Jag har lagt till..." i chatten ändrar INTE kundvagnen. Du MÅSTE göra ett verktygsanrop varje gång kundvagnen ska ändras.
-    - Om användaren rättar ett tidigare val (t.ex. "jag menade den som var 10999", "nej, den andra") eller påpekar att en vara inte lades till ("den lades inte till"), MÅSTE du anropa add_to_cart på nytt med rätt produktnamn.
 
     Verktygsval (använd exakt ett verktyg per åtgärd):
     - Produktfrågor (pris, lager, kategori, märke) → search_products
