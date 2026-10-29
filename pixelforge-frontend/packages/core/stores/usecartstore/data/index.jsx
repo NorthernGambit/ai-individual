@@ -1,46 +1,48 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export const useCartStore = create((set) => ({
-    cart: [],
+	cart: [],
 
-    addToCart: (product) => set((state) => {
-        const existingProduct = state.cart.find(
-            (item) => item.productId === product.id
-        );
+	addToCart: (product, qty = 1) =>
+		set((state) => {
+			const existing = state.cart.find(
+				(item) => item.productId === product.id,
+			);
 
-        if (existingProduct) {
-            return {
-                cart: state.cart.map((item) =>
-                    item.productId === product.id
-                        ? { ...item, qty: item.qty + 1 }
-                        : item
-                )
-            };
-        }
+			if (existing) {
+				return {
+					cart: state.cart.map((item) =>
+						item.productId === product.id
+							? { ...item, qty: item.qty + qty }
+							: item,
+					),
+				};
+			}
 
-        return {
-            cart: [
-                ...state.cart,
-                {
-                    productId: product.id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                    qty: 1
-                }
-            ]
-        };
-    }),
+			return {
+				cart: [
+					...state.cart,
+					{
+						productId: product.id,
+						name: product.name,
+						price: product.price,
+						image: product.image,
+						qty,
+					},
+				],
+			};
+		}),
 
-    removeFromCart: (productId) => set((state) => ({
-        cart: state.cart
-            .map((item) =>
-                item.productId === productId
-                    ? { ...item, qty: item.qty - 1 }
-                    : item
-            )
-            .filter((item) => item.qty > 0)
-    })),
+	removeFromCart: (productId, qty = 1) =>
+		set((state) => ({
+			cart: state.cart
+				.map((item) =>
+					item.productId === productId
+						? { ...item, qty: item.qty - qty }
+						: item,
+				)
+				.filter((item) => item.qty > 0),
+		})),
 
-    clearCart: () => set({ cart: [] })
+	clearCart: () => set({ cart: [] }),
 }));

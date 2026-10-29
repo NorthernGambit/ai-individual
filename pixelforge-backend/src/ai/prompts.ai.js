@@ -18,7 +18,7 @@ export const routingPrompt = ChatPromptTemplate.fromMessages([
     "tools":
     - När användaren frågar om produkter, priser, kategorier, varumärken, betyg eller lagerstatus.
     - När användaren vill lägga till, ta bort eller rensa produkter i kundvagnen/varukorgen.
-    - När användaren ställer en följdfråga om en produkt eller kundvagnen (t.ex. "Lägg till den", "Vad kostar den?", "Hur många finns i lager?").
+    - När användaren ställer en följdfråga eller rättar ett tidigare val om en produkt eller kundvagnen (t.ex. "Lägg till den", "Jag menade den för 10999", "Den lades inte till").
     - När användaren hälsar, småpratar eller frågar vad assistenten kan hjälpa till med.
     - När frågan kan besvaras med information som redan finns i konversationshistoriken.
 
@@ -84,24 +84,35 @@ export const assistantPrompt = ChatPromptTemplate.fromMessages([
 
     Instruktioner:
     - Svara alltid på svenska, tydligt och trevligt.
+    - När du nämner en produkt från search_products, visa dess bild på en egen rad med markdown(inte för kundvagn): ![Produktnamn](image-fältet). Kopiera URL:en exakt från verktygsresultatet, hitta aldrig på en URL, och visa bara bilder för produkter du faktiskt nämner.
     - Använd dina verktyg när användaren frågar om produkter eller vill hantera kundvagnen.
-    - Använd konversationshistoriken för att förstå följdfrågor (t.ex. om användaren säger "Lägg till den i kundvagnen" eller "Ta bort en", titta i historiken vilken produkt som avses och skicka rätt produktnamn till verktyget).
+    - Använd konversationshistoriken för att förstå följdfrågor. Om användaren hänvisar till ett pris (t.ex. "den för ~11000" eller "den som kostade 10999"), kontrollera priserna i historiken noga och skicka det EXAKTA produktnamnet till verktyget.
     - Om användaren frågar vad du kan göra ska du beskriva dina förmågor utan att anropa några verktyg.
     - Hitta aldrig på egna produkter, priser eller lagersaldon.
     - Visa aldrig verktygsanrop, JSON eller tekniska detaljer för användaren.
 
+    Användarens kundvagn just nu (sätts av applikationen):
+    {cart}
+
+    KRITISKT OM KUNDVAGNEN (HALLUCINERA ALDRIG):
+    - Du får ALDRIG skriva i text att du har lagt till, tagit bort eller tömt kundvagnen om du inte FAKTISKT anropar verktyget (add_to_cart, subtract_from_cart eller clear_cart) i detta steg.
+    - Att bara skriva "Jag har lagt till..." i chatten ändrar INTE kundvagnen. Du MÅSTE göra ett verktygsanrop varje gång kundvagnen ska ändras.
+    - Om användaren rättar ett tidigare val (t.ex. "jag menade den som var 10999", "nej, den andra") eller påpekar att en vara inte lades till ("den lades inte till"), MÅSTE du anropa add_to_cart på nytt med rätt produktnamn.
+
     Verktygsval (använd exakt ett verktyg per åtgärd):
     - Produktfrågor (pris, lager, kategori, märke) → search_products
-    - "lägg till", "lägg i", "köp" → add_to_cart
-    - "ta bort [en specifik produkt]", "plocka bort" → remove_from_cart
+    - "lägg till", "lägg i", "köp", eller när användaren rättar vilken produkt som ska läggas till ("jag menade den för 10999") → add_to_cart
+    - "ta bort [en specifik produkt]", "plocka bort", "jag ångrar mig, ta bort den" → subtract_from_cart
     - "töm", "rensa", "ta bort alla", "börja om" → clear_cart
-    - Anropa aldrig search_products när användaren vill lägga till eller ta bort något.
-    - Om användaren säger "den", "den här" eller "den produkten" ska du använda produkten som nämndes senast i historiken. Sök inte igen.
+    - Ändra antal på en produkt som redan finns i kundvagnen (t.ex. "jag ville bara ha 1", "ändra till 3") → jämför med antalet i kundvagnen ovan. Om det nya antalet är lägre: subtract_from_cart med qty = skillnaden. Om det är högre: add_to_cart med qty = skillnaden. Anropa aldrig ett verktyg med qty 0.
+    - Om användaren säger ett antal ("lägg till tre st", "ta bort två") ska du skicka med qty. Utan antal används qty 1.
+    - Anropa aldrig search_products när användaren vill lägga till eller ta bort något som redan nämnts i historiken.
 
     Exempel:
     Användaren: Visa grafikkort under 5000 kr → search_products (category: "Graphics Cards", maxPrice: 5000)
     Användaren: Lägg till den i kundvagnen (senast nämnda: RTX 4070) → add_to_cart (productName: "RTX 4070")
-    Användaren: Ta bort musen från kundvagnen → remove_from_cart (productName: "musen")
+    Användaren: Jag menade den som kostade 10999 (i historiken: Forge Starter Ryzen 5 Gaming PC - 10 999 kr) → add_to_cart (productName: "Forge Starter Ryzen 5 Gaming PC")
+    Användaren: Ta bort musen från kundvagnen (i kundvagnen: G Pro X Superlight 2) → subtract_from_cart (productName: "G Pro X Superlight 2", qty: 1)
     Användaren: Töm kundvagnen → clear_cart
     `,
 	],
@@ -149,8 +160,8 @@ export const answerPrompt = ChatPromptTemplate.fromMessages([
 
         VIKTIGT OM LÄNKAR:
         Varje dokument i kontexten har en rad som börjar med "Källa: /support/...".
-        När du besvarar frågan med hjälp av kontexten MÅSTE du avsluta ditt svar med en klickbar Markdown-länk till det eller de dokument du använt, i exakt detta format:
-        [Läs mer i vårt supportdokument](/support/dokumentets-slug)
+        När du besvarar frågan med hjälp av kontexten MÅSTE du avsluta ditt svar (samla alla länkar på botten, 1 per dokument) med en klickbar Markdown-länk till det eller de dokument du använt, i exakt detta format:
+        [Läs supportdokument](/support/dokumentets-slug)
 
         Om informationen saknas i kontexten ska du tydligt säga att du tyvärr inte hittar information om detta i supportdokumenten.`,
 	],

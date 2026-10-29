@@ -54,3 +54,42 @@
 		border-bottom-left-radius: 0.25rem;
 	}
 }
+
+.message .message__bubble .message__text a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	margin-top: 0.4rem;
+	padding: 0.3rem 0.75rem;
+	border: 1px solid var(--color-brand);
+	border-radius: 999px;
+	color: var(--color-brand-light);
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+	text-decoration: none;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.message .message__bubble .message__text a:hover {
+	background-color: var(--color-brand);
+	color: var(--color-text-primary);
+}
+
+.message .message__bubble .message__text img {
+	display: block;
+	max-width: 75%;
+	max-height: 16rem;
+	width: auto;
+	height: auto;
+	margin: 0.5rem 0;
+	border-radius: 0.5rem;
+}
+
+.message .message__bubble .message__text ul,
+.message .message__bubble .message__text ol {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}

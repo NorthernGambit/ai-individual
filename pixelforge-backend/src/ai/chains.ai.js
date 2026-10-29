@@ -8,19 +8,19 @@ import {
 	answerPrompt,
 	routingPrompt,
 } from "./prompts.ai.js";
-import { llm } from "../config/ollama.config.js";
+import { llm, fastLlm } from "../config/ollama.config.js";
 import { retrieveDocuments } from "./retriever.ai.js";
 import { combineDocuments } from "../utils/combineDocuments.js";
 import { routingSchema } from "./schemas.ai.js";
 
 export const llmRoutingChain = RunnableSequence.from([
 	routingPrompt,
-	llm.withStructuredOutput(routingSchema),
+	fastLlm.withStructuredOutput(routingSchema),
 ]);
 
 const standaloneQuestionChain = RunnableSequence.from([
 	standaloneQuestionPrompt,
-	llm,
+	fastLlm,
 	new StringOutputParser(),
 ]);
 

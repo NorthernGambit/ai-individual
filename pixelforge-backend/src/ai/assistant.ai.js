@@ -5,15 +5,17 @@ import { assistantPrompt } from "./prompts.ai.js";
 
 const llmWithTools = llm.bindTools(tools);
 
-export const invokeAssistant = async (question, history) => {
+export const invokeAssistant = async (question, history, cart = []) => {
 	const messages = await assistantPrompt.formatMessages({
 		question,
 		history,
+		cart: formatCart(cart),
 	});
 
 	const response = await llmWithTools.invoke(messages);
 
 	if (!response.tool_calls?.length) {
+		console.log("[ASSISTANT] Direct response (no tools called)");
 		return {
 			content: response.content,
 			cartActions: [],
@@ -24,6 +26,10 @@ export const invokeAssistant = async (question, history) => {
 	const cartActions = [];
 
 	for (const toolCall of response.tool_calls) {
+		console.log(
+			`[TOOL] Calling ${toolCall.name} with args:`,
+			JSON.stringify(toolCall.args),
+		);
 		const selectedTool = tools.find((tool) => tool.name === toolCall.name);
 
 		if (!selectedTool) {
@@ -47,14 +53,29 @@ export const invokeAssistant = async (question, history) => {
 		);
 	}
 
-	const finalResponse = await llmWithTools.invoke([
+	const finalResponse = await llm.invoke([
 		...messages,
 		response,
 		...toolMessages,
 	]);
 
 	return {
-		content: finalResponse.content,
+		content: finalResponse.content || "Något gick fel, försök igen.",
 		cartActions,
 	};
+};
+
+const formatCart = (cart) => {
+	if (cart.length === 0) {
+		return "Kundvagnen är tom.";
+	}
+
+	const lines = [];
+
+	for (const item of cart) {
+		const line = `- ${item.name}, ${item.price}sek, (${item.qty} st)`;
+		lines.push(line);
+	}
+
+	return lines.join("\n");
 };

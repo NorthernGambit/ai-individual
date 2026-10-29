@@ -34,19 +34,24 @@ export const useChat = () => {
 		const updatedMessages = [...messages, userMessage];
 		setMessages(updatedMessages);
 
+		const cart = useCartStore
+			.getState()
+			.cart.map(({ name, price, qty }) => ({ name, price, qty }));
+
 		try {
 			const { answer, cartActions = [] } = await mutateAsync({
 				question,
 				history: messages,
+				cart,
 			});
 
-			console.log(cartActions);
+			// console.log(cartActions);
 
 			for (const action of cartActions) {
 				if (action.type === "add" && action.product) {
-					addToCart(action.product);
-				} else if (action.type === "remove" && action.productId) {
-					removeFromCart(action.productId);
+					addToCart(action.product, action.qty);
+				} else if (action.type === "subtract" && action.productId) {
+					removeFromCart(action.productId, action.qty);
 				} else if (action.type === "clear") {
 					clearCart();
 				}

@@ -26,7 +26,7 @@ export const fetchDocuments = async () => {
 	return data;
 };
 
-export const askQuestion = async ({ question, history }) => {
+export const askQuestion = async ({ question, history, cart }) => {
 	const response = await fetch("http://localhost:8080/api/chat", {
 		method: "POST",
 		headers: {
@@ -35,6 +35,7 @@ export const askQuestion = async ({ question, history }) => {
 		body: JSON.stringify({
 			question,
 			history,
+			cart,
 		}),
 	});
 

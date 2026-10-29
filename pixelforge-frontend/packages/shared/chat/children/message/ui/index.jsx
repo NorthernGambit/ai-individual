@@ -1,5 +1,6 @@
 import "./index.css";
 import Markdown from "react-markdown";
+import { Link } from "react-router-dom";
 
 export const Message = ({ content, role }) => {
 	const isOwnMessage = role === "user";
@@ -14,7 +15,15 @@ export const Message = ({ content, role }) => {
 				</span>
 
 				<div className="message__text">
-					<Markdown>{content}</Markdown>
+					<Markdown
+						components={{
+							a: ({ href, children }) => (
+								<Link to={href}>{children}</Link>
+							),
+						}}
+					>
+						{content}
+					</Markdown>
 				</div>
 			</section>
 		</li>
